@@ -13,9 +13,9 @@ ssl_context.load_cert_chain('ldn1whisper.crt', 'ldn1whisper.key')
 
 # OpenAI keys
 openai.api_type = "azure"
-openai.api_base = os.getenv('AZURE_OPENAI_ENDPOINT')
-openai.api_version = "2023-05-15"
-openai.api_key = os.getenv('AZURE_OPENAI_KEY')
+openai.api_base = os.getenv('AZURE_OPENAI_ENDPOINT')  ### Remove this if you're using OpenAI
+openai.api_version = "2023-05-15"  ### Remove this if you're using OpenAI
+openai.api_key = os.getenv('AZURE_OPENAI_KEY')    ### Change this to your OpenAI Key
 
 model = WhisperModel('large-v2', device="cuda", compute_type="float32")  ### Change to int8 or int8_float16 if you have a more capable GPU (AWS)
 
@@ -65,9 +65,20 @@ async def gpt_process(transcript):
 
         # Call the OpenAI API to generate a chat completion
         response = openai.ChatCompletion.create(   
-            engine="eit_gptturbo",   
-            messages=messages     
+            engine="eit_gptturbo",     ### Change this to the OpenAI engine of: gpt-3.5-turbo - https://platform.openai.com/docs/guides/chat/introduction
+            messages=messages
+            #temperature=0     
         )
+        
+        """
+        For the temperature setting, it depends on the specific requirements of your conversation and the desired trade-off between creativity and sticking closely to the given context. Here are a few recommendations:
+
+        Temperature of 0.2-0.5: Use a lower temperature if you want the responses to be more focused and deterministic. This will make the model generate more precise and conservative responses, sticking closely to the knowledge and context provided.
+
+        Temperature of 0.8-1.0: Increase the temperature if you want more creativity and variability in the responses. This can lead to more exploratory and imaginative answers, but it may also cause the model to generate less accurate or coherent responses at times.
+
+        Experiment and fine-tune: Feel free to adjust the temperature within the recommended range and see what works best for your specific use case. It's often helpful to try different settings and evaluate the results to find the right balance between accuracy and creativity.
+        """
 
         # Get the generated text from the API response
         text_output = response["choices"][0]["message"]["content"]
