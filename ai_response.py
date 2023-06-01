@@ -39,7 +39,7 @@ async def transcribe(request):
 
         transcription = ''
         for segment in segments:
-            transcription += f"{segment.txt}\n"
+            transcription += f"{segment.text}\n"
 
 
 
