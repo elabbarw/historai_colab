@@ -9,7 +9,7 @@ load_dotenv()
 
 # Create an SSL context
 ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-ssl_context.load_cert_chain('ldn1whisper.crt', 'ldn1whisper.key')
+ssl_context.load_cert_chain('ldn1whisper.crt', 'ldn1whisper.key')  #### Sort you a self-signed or CA signed cert. You cannot use the microphone transcription without it because HTTPS is a requirement
 
 # OpenAI keys
 openai.api_type = "azure"
