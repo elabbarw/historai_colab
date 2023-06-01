@@ -97,7 +97,7 @@ async def index(request):
 app = web.Application()
 app.router.add_get('/', index)
 app.router.add_post('/transcribe', transcribe)
-app.router.add_post('/talkwithme', gpt_process)
+app.router.add_post('/talktome', gpt_process)
 
 
 web.run_app(app, host='0.0.0.0', port=5000, ssl_context=ssl_context)
