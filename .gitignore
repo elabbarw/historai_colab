@@ -1,0 +1,11 @@
+.vscode
+*.env
+*.csr
+*.crt
+*.key
+build
+dist
+*.spec
+*.txt
+*.wav
+*.mp3
