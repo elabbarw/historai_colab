@@ -6,6 +6,5 @@
 build
 dist
 *.spec
-*.txt
 *.wav
 *.mp3

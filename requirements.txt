@@ -1,0 +1,13 @@
+scrubadub
+scrubadub_spacy
+spacy 
+numpy==1.23.5
+protobuf==3.20.1
+--extra-index-url https://download.pytorch.org/whl/cu116 torch==1.13.1
+faster-whisper
+aiohttp
+openai
+python-dotenv
+pyopenssl
+librosa
+soundfile
