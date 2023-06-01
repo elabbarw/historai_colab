@@ -168,9 +168,7 @@
             $('#submit-transcript-btn').click(function() {
                 var visibleTranscript = "";
                 var transcriptBox = $('#transcript');
-
-
-                    visibleTranscript = transcriptBox.val();
+                visibleTranscript = transcriptBox.val();
 
                 if (visibleTranscript.trim() !== "") {
                     talktome(visibleTranscript);
@@ -217,7 +215,7 @@
         </div>
         <p>Transcription:</p>
         <div class="result-box">
-            <textarea id="transcript" style="white-space: pre-wrap; display: none;"></textarea>
+            <textarea id="transcript" style="white-space: pre-wrap;"></textarea>
         </div>
         <button id="submit-transcript-btn">Submit Transcript</button>
         <p>Summary & Sentiment from EIT Azure OpenAI (gpt35_turbo):</p>
