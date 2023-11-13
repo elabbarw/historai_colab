@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histor.ai Colaboartion using OpenAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .form-group input[type="file"] {
+            display: block;
+        }
+        
+        .form-group button {
+            display: block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        #transcript {
+            width: 100%;
+            height: 200px;
+            resize: vertical;
+        }
+        
+        .result-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        
+        .result-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            var mediaRecorder;
+            var chunks = [];
+            var isUploading = false;
+        
+            $('#upload-form').submit(function(event) {
+                event.preventDefault();
+                if (isUploading) {
+                    return;
+                }
+                isUploading = true;
+                $('#upload-btn').attr('disabled', 'disabled').text('Processing...');
+                var fileInput = $('#file-input')[0];
+                var file = fileInput.files[0];
+                if (!file) {
+                    alert('No file selected.');
+                    isUploading = false;
+                    enableButtons();
+                    return;
+                }
+                var formData = new FormData();
+                formData.append('file', file);
+                $.ajax({
+                    url: '/transcribe',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        displayTranscription(response.transcription);
+                        $('#upload-btn').removeAttr('disabled').text('Transcribe');
+                        isUploading = false;
+                    },
+                    error: function(xhr, status, error) {
+                        console.log(error);
+                        $('#upload-btn').removeAttr('disabled').text('Transcribe');
+                        isUploading = false;
+                    }
+                });
+            });
+        
+            $('#microphone-start').click(function() {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(function(stream) {
+                            mediaRecorder = new MediaRecorder(stream);
+                            mediaRecorder.ondataavailable = function(e) {
+                                chunks.push(e.data);
+                            };
+                            mediaRecorder.start();
+                            $('#microphone-start').attr('disabled', 'disabled');
+                            $('#upload-btn').attr('disabled', 'disabled').text('Processing...');
+                            $('#microphone-stop').removeAttr('disabled');
+                        })
+                        .catch(function(error) {
+                            console.log('Error:', error);
+                        });
+                } else {
+                    console.log('getUserMedia not supported');
+                }
+            });
+        
+            $('#microphone-stop').click(function() {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    mediaRecorder.onstop = function() {
+                        var blob = new Blob(chunks, { type: 'audio/wav' });
+                        var formData = new FormData();
+                        formData.append('audio_data', blob);
+                        $.ajax({
+                            url: '/transcribe',
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response) {
+                                displayTranscription(response.transcription);
+
+
+                            },
+                            error: function(xhr, status, error) {
+                                console.log(error);
+                            },
+                            complete: function() {
+                        $('#microphone-stop').attr('disabled', 'disabled');
+                        $('#microphone-start').removeAttr('disabled');
+                        $('#upload-btn').removeAttr('disabled').text('Transcribe');
+
+                            }
+                        });
+                        chunks = [];
+
+                    };
+                }
+            });
+        
+            function displayTranscription(transcription) {
+                var resultBox = $('#transcript');
+                resultBox.val('');
+                resultBox.val(transcription);
+            }
+
+            
+            $('#submit-transcript-btn').click(function() {
+                var visibleTranscript = "";
+                var transcriptBox = $('#transcript');
+                visibleTranscript = transcriptBox.val();
+
+                if (visibleTranscript.trim() !== "") {
+                    talktome(visibleTranscript);
+                }
+                });
+            
+            function talktome(transcript) {
+                $('#submit-transcript-btn').attr('disabled', 'disabled').text('Processing...');
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/talktome', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onreadystatechange = function() {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        displaySummary(response.summary);
+                        $('#submit-transcript-btn').removeAttr('disabled').text('Submit Transcript');
+                    }
+                };
+                xhr.send(JSON.stringify({ transcript: transcript }));
+            }
+            
+            function displaySummary(summary) {
+                var summaryBox = $('#talktome-box');
+                summaryBox.empty();
+                summaryBox.append(summary);
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Histor.ai Audio Transcription</h1>
+        <form id="upload-form">
+            <div class="form-group">
+                <label for="file-input">Select File:</label>
+                <input type="file" id="file-input" accept=".wav">
+            </div>
+            <button id="upload-btn" type="submit">Transcribe</button>
+        </form>
+        <div>
+            <h2>Microphone Input</h2>
+            <button id="microphone-start">Start Recording</button>
+            <button id="microphone-stop" disabled="disabled">Stop Recording</button>
+        </div>
+        <p>Transcription:</p>
+        <div class="result-box">
+            <textarea id="transcript" style="white-space: pre-wrap;"></textarea>
+        </div>
+        <button id="submit-transcript-btn">Submit Transcript</button>
+        <p>General Hanibaal's Response (gpt35_turbo):</p>
+        <div class="result-box">
+            <div id="talktome-box" style="white-space: pre-wrap;"></div>
+        </div>
+
+    </div>
+</body>
+</html>
